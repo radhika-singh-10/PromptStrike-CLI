@@ -1,2 +1,3 @@
-# Agent-Security-Evaluator-CLI
-Built a CLI security analyzer for agentic AI workflows that detects prompt injection, unsafe tool usage, policy bypass, and data leakage. Uses graph-based dependency analysis and rule-based validation with optional LLM-assisted semantic checks to identify risks and suggest fixes.
+# PromptStrike-CLI
+
+A CLI-based LLM red-teaming tool that simulates prompt injection, data exfiltration, and jailbreak attacks against chat APIs and prompt templates. It evaluates responses using rule-based and heuristic checks to detect instruction override, secret leakage, and unsafe behavior, producing structured security reports.

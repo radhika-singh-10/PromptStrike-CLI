@@ -37,6 +37,20 @@ PromptStrikeCLI/
 └── README.md
 ```
 
+## Ollama Dependency
+PromptStrike relies heavily on **[Ollama](https://ollama.com/)** to power its autonomous agents and AI-driven guardrail checks.
+
+- **What is it?** Ollama is a lightweight framework that allows you to easily run large language models locally on your own machine.
+- **Why do we use it?** Running red-team agents locally ensures that your evaluation data and sensitive target responses never leave your machine. It also completely eliminates API latency and expensive token costs typically associated with thousands of prompt evaluations.
+
+### Setup Instructions
+1. Download and install Ollama from [ollama.com](https://ollama.com/download).
+2. Start the Ollama background service if it isn't running.
+3. Pull the default test model:
+   ```bash
+   ollama pull llama3
+   ```
+
 ## Quick Start
 ```bash
 python -m venv .venv

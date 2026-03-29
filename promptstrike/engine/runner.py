@@ -10,23 +10,30 @@ from promptstrike.targets.http_api import HttpApiAdapter
 from promptstrike.targets.prompt_file import PromptFileAdapter
 
 
-def run_api_tests(url: str, attacks: Iterable[Attack]) -> Report:
+import concurrent.futures
+
+def _execute_api_attack(adapter: HttpApiAdapter, attack: Attack) -> Finding:
+    response = adapter.send(attack.payload)
+    result = evaluate_response(attack, response)
+    return Finding(
+        attack_id=attack.id,
+        attack_name=attack.name,
+        category=attack.category,
+        severity=attack.severity,
+        compromised=result.success,
+        evidence="; ".join(result.evidence) if result.evidence else result.notes,
+        recommendation="Add stronger prompt boundaries and output filtering.",
+    )
+
+def run_api_tests(url: str, attacks: Iterable[Attack], concurrency: int = 5) -> Report:
     adapter = HttpApiAdapter(url=url)
     findings = []
-    for attack in attacks:
-        response = adapter.send(attack.payload)
-        result = evaluate_response(attack, response)
-        findings.append(
-            Finding(
-                attack_id=attack.id,
-                attack_name=attack.name,
-                category=attack.category,
-                severity=attack.severity,
-                compromised=result.success,
-                evidence="; ".join(result.evidence) if result.evidence else result.notes,
-                recommendation="Add stronger prompt boundaries and output filtering.",
-            )
-        )
+    
+    with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+        fs = [executor.submit(_execute_api_attack, adapter, attack) for attack in attacks]
+        for future in concurrent.futures.as_completed(fs):
+            findings.append(future.result())
+            
     return _build_report(target=url, findings=findings)
 
 

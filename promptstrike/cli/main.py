@@ -24,10 +24,11 @@ def list_attacks() -> None:
 def test_api(
     url: str,
     pack: str = typer.Option("basic", help="Built-in attack pack name."),
+    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Number of concurrent API requests."),
     out: Optional[Path] = typer.Option(None, help="Write JSON report to file."),
 ) -> None:
     attacks = load_attack_pack(pack)
-    report = run_api_tests(url=url, attacks=attacks)
+    report = run_api_tests(url=url, attacks=attacks, concurrency=concurrency)
     print_report(report)
     if out:
         write_json_report(report, out)

@@ -86,5 +86,45 @@ def show_config(config_file: Path) -> None:
     typer.echo(json.dumps(config, indent=2))
 
 
+@app.command("analyze-workflow")
+def analyze_workflow(
+    directory: str = typer.Argument(..., help="Path to the AI agent's source code directory."),
+) -> None:
+    from promptstrike.engine.sast import analyze_directory
+    from rich.tree import Tree
+    from rich import print as rprint
+    from rich.panel import Panel
+
+    typer.echo(f"Running graph-based SAST analysis on {directory}...\n")
+    graph = analyze_directory(directory)
+    
+    if not graph.vulnerabilities:
+        rprint("[bold green]✅ No AI security vulnerabilities found in workflow![/bold green]")
+    else:
+        rprint(f"[bold red]❌ Found {len(graph.vulnerabilities)} Vulnerabilities:[/bold red]")
+        for i, vuln in enumerate(graph.vulnerabilities, 1):
+            rprint(Panel(
+                f"[bold]Risk:[/bold] {vuln.risk}\n[bold]File:[/bold] {vuln.file}:{vuln.line}\n[bold]Description:[/bold] {vuln.description}\n[bold]Mitigation:[/bold] [green]{vuln.mitigation}[/green]",
+                title=f"Vulnerability #{i}",
+                border_style="red"
+            ))
+            
+    rprint("\n[bold cyan]Dependency Call Graph[/bold cyan]")
+    # Group edges by caller
+    adjacency = {}
+    for caller, callee in graph.edges:
+        if caller not in adjacency:
+            adjacency[caller] = []
+        if callee not in adjacency[caller]:
+            adjacency[caller].append(callee)
+            
+    tree = Tree(directory)
+    for caller, callees in adjacency.items():
+        node = tree.add(f"[bold yellow]{caller}[/bold yellow]")
+        for callee in callees:
+            node.add(f"[blue]{callee}[/blue]")
+            
+    rprint(tree)
+
 if __name__ == "__main__":
     app()

@@ -96,7 +96,7 @@ def run_agentic_tests(url: str, model: str, max_iterations: int, objective: str)
                 severity=attack.severity,
                 compromised=result.success,
                 evidence="; ".join(result.evidence) if result.evidence else result.notes,
-                recommendation="Review the system prompt and add stronger output guardrails.",
+                recommendation=result.mitigation or "Review the system prompt and add stronger output guardrails.",
             )
         )
         

@@ -8,6 +8,7 @@ class EvaluationResult(BaseModel):
     matched_rules: list[str]
     evidence: list[str]
     notes: str
+    mitigation: str = ""
 
 
 class Finding(BaseModel):

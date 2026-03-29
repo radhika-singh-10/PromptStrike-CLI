@@ -8,7 +8,8 @@ PromptStrike CLI is a Python-based red-teaming framework for testing LLM applica
 - Prompt-file target adapter
 - Rule-based evaluator
 - Agentic red-teaming via local LLMs (Ollama)
-- LLM-as-a-judge for dynamic evaluation
+- Graph-based dependency analysis (SAST) for tool & leakage risks
+- Dynamic LLM-assisted risk mitigation suggestions
 - Fast concurrent execution for API scanning
 - Rich terminal output
 - JSON report export
@@ -53,6 +54,9 @@ promptstrike test-prompt examples/vulnerable_prompt.txt --pack exfiltration --ca
 
 # Agentic testing (Ensure you have pulled your chosen model first via 'ollama pull llama3')
 promptstrike test-agentic http://localhost:8000/chat --model llama3 --iterations 10 --objective "exfiltration"
+
+# SAST Agent Analysis (Scans a directory using AST graph graphing)
+promptstrike analyze-workflow path/to/agent/code/
 ```
 
 ## Notes

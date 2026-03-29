@@ -9,6 +9,11 @@ You can find the high-resolution, uncolored SVG graphical files for these diagra
 - [Agentic Flow (Graphical SVG)](docs/agentic_flow.svg)
 - [Static Flow (Graphical SVG)](docs/static_flow.svg)
 
+## 5-State Enum Evaluation & Dataset Builder Flowcharts
+*New robust diagrams built native in Mermaid detailing our latest updates:*
+- [The 5-State Measurement Enum Lifecycle](docs/enum_evaluation_flow.md)
+- [Interactive Dataset Builder REPL Flow](docs/dataset_builder_flow.md)
+
 ---
 
 ## 1. System Architecture
@@ -20,22 +25,26 @@ graph TD
     
     subgraph Engine Layer
         StaticRunner["Static Runner\n`runner.py`"]
-        AgentRunner["Agentic Runner\n`agent.py`"]
+        AgentRunner["MultiTurnAgenticRunner\n`multi_turn_runner.py`"]
         AttackLoader["Attack Loader\n(YAML)"]
     end
 
     subgraph Evaluation Layer
         RulesEvaluator["Rules Evaluator\n(Regex/Static)"]
-        LLMJudge["LLM-as-a-Judge\n(Ollama)"]
+        LLMJudge["Enum Measurement Engine\n(5-State Status)"]
     end
     
     subgraph Target Adapters
         APIAdapter["HTTP API Adapter"]
         PromptAdapter["Prompt File Adapter"]
+        OllamaAdapter["Ollama Native Adapter"]
+        OpenAIAdapter["OpenAI API Adapter"]
+        InteractiveAdapter["Human CLI Adapter"]
     end
 
     LocalOllama(("Ollama (Local LLM)"))
     ExternalTarget(("Target App / API"))
+    HumanUser(("Human Target"))
 
     User -->|Runs Commands| CLI
     CLI -->|test-api/test-prompt| StaticRunner
@@ -47,13 +56,18 @@ graph TD
     
     StaticRunner -->|Sends Payload| APIAdapter
     StaticRunner -->|Sends Payload| PromptAdapter
+    
     AgentRunner -->|Sends Payload| APIAdapter
+    AgentRunner -->|Sends Payload| OllamaAdapter
+    AgentRunner -->|Sends Payload| OpenAIAdapter
+    AgentRunner -->|Interactive Defense| InteractiveAdapter
     
     APIAdapter -->|HTTP Request| ExternalTarget
     ExternalTarget -->|Response| APIAdapter
+    InteractiveAdapter -->|Prompts CLI| HumanUser
     
     StaticRunner -->|Validates| RulesEvaluator
-    AgentRunner -->|Validates Status| LLMJudge
+    AgentRunner -->|Extracts Status Enum| LLMJudge
     LLMJudge -->|Chat| LocalOllama
 ```
 
@@ -80,18 +94,20 @@ sequenceDiagram
         Agent->>Target: Send Attack Payload
         Target-->>Agent: Target Response
         
-        Agent->>Judge: evaluate_with_llm(Attack, Response)
-        Judge-->>Agent: Result (Compromised?)
+        Agent->>Judge: evaluate_with_llm(Attack, Response, ExpectedBehavior)
+        Judge-->>Agent: Status Enum (COMPROMISED, SECURE, INCONCLUSIVE)
         
-        alt Target Compromised
-            Agent->>Agent: Break Loop Early!
-        else Safely Rejected
-            Agent->>Agent: Append failure to History
+        alt State: INCONCLUSIVE
+            Agent->>Agent: Network Error / Target Down. Break Loop Early!
+        else State: COMPROMISED
+            Agent->>Agent: Objective Achieved. Break Loop Early!
+        else State: SECURE
+            Agent->>Agent: Safely Rejected. Append failure to History.
         end
     end
     
-    Agent-->>CLI: Final Attack Report
-    CLI-->>User: Terminal Output 
+    Agent-->>CLI: Final Status Report
+    CLI-->>User: Rich Terminal Tables 
 ```
 
 ### Static Execution Flow (`test-api` with --concurrency)

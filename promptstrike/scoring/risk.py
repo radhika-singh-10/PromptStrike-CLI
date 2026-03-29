@@ -14,7 +14,7 @@ def summarize_severity(findings) -> SeveritySummary:
 
 
 def compute_overall_risk(findings) -> str:
-    score = sum(SCORES.get(f.severity.upper(), 0) for f in findings if f.compromised)
+    score = sum(SCORES.get(f.severity.upper(), 0) for f in findings if f.status == "COMPROMISED")
     if score >= 90:
         return "CRITICAL"
     if score >= 50:

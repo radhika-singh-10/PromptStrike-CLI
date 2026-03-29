@@ -20,7 +20,7 @@ def _execute_api_attack(adapter: HttpApiAdapter, attack: Attack) -> Finding:
         attack_name=attack.name,
         category=attack.category,
         severity=attack.severity,
-        compromised=result.success,
+        status=result.status,
         evidence="; ".join(result.evidence) if result.evidence else result.notes,
         recommendation="Add stronger prompt boundaries and output filtering.",
     )
@@ -49,7 +49,7 @@ def run_prompt_tests(prompt_file: Path, attacks: Iterable[Attack], use_canary: b
                 attack_name=attack.name,
                 category=attack.category,
                 severity=attack.severity,
-                compromised=result.success,
+                status=result.status,
                 evidence="; ".join(result.evidence) if result.evidence else result.notes,
                 recommendation="Mask hidden instructions and isolate secrets from prompt context.",
             )
@@ -58,7 +58,7 @@ def run_prompt_tests(prompt_file: Path, attacks: Iterable[Attack], use_canary: b
 
 
 def _build_report(target: str, findings: list[Finding]) -> Report:
-    successful = sum(1 for f in findings if f.compromised)
+    successful = sum(1 for f in findings if f.status == "COMPROMISED")
     return Report(
         target=target,
         total_attacks=len(findings),

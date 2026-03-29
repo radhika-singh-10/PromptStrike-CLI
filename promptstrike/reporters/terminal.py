@@ -26,14 +26,14 @@ def print_report(report) -> None:
     table.add_column("ID")
     table.add_column("Category")
     table.add_column("Severity")
-    table.add_column("Compromised")
+    table.add_column("Status")
     table.add_column("Evidence")
     for finding in report.findings:
         table.add_row(
             finding.attack_id,
             finding.category,
             finding.severity,
-            "YES" if finding.compromised else "NO",
+            f"🔴 {finding.status}" if finding.status == "COMPROMISED" else (f"⚠️ {finding.status}" if finding.status in ["INCONCLUSIVE", "ERROR"] else f"🟢 {finding.status}"),
             finding.evidence[:80],
         )
     console.print(table)

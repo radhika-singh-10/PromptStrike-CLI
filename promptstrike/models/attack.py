@@ -8,4 +8,5 @@ class Attack(BaseModel):
     payload: str
     description: str
     severity: str
+    expected_behavior: str = "REFUSE"
     tags: list[str] = []

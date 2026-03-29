@@ -7,12 +7,14 @@ PromptStrike CLI is a Python-based red-teaming framework for testing LLM applica
 - HTTP API target adapter
 - Prompt-file target adapter
 - Rule-based evaluator
-- Agentic red-teaming via local LLMs (Ollama)
+- Agentic red-teaming via local LLMs (Ollama) with multi-turn escalation
+- Interactive Human-in-the-Loop target simulation (`interactive` mode)
+- Custom JSON Dataset Builder REPL loop
+- Advanced 5-state Evaluation Enum Measurement system (COMPROMISED, SECURE, INCONCLUSIVE, NORMAL, ERROR)
 - Graph-based dependency analysis (SAST) for tool & leakage risks
 - Dynamic LLM-assisted risk mitigation suggestions
 - Fast concurrent execution for API scanning
-- Rich terminal output
-- JSON report export
+- Rich terminal output and Markdown/JSON report export
 - Canary secret leakage testing
 
 ## Project Structure
@@ -55,8 +57,14 @@ promptstrike test-prompt examples/vulnerable_prompt.txt --pack exfiltration --ca
 # Agentic testing (Ensure you have pulled your chosen model first via 'ollama pull llama3')
 promptstrike test-agentic http://localhost:8000/chat --model llama3 --iterations 10 --objective "exfiltration"
 
-# SAST Agent Analysis (Scans a directory using AST graph graphing)
-promptstrike analyze-workflow path/to/agent/code/
+# Interactive Human-Defense mode (Act as the target against the Attacker LLM)
+promptstrike test-agentic human-cli --target-type interactive --model llama3
+
+# Offline Benchmark Evaluation (Run adversarial test suite against local Guardrail agent)
+promptstrike evaluate ../promptstrike_adversarial_suite/adversarial_test_suite.json --model llama3 --out adversarial_metrics.json
+
+# Interactive Dataset Builder (Generate your own test cases manually)
+promptstrike build-dataset ../promptstrike_adversarial_suite/adversarial_test_suite.json --model llama3
 ```
 
 ## Notes

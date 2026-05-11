@@ -1,5 +1,5 @@
 import json
-import ollama
+import openai
 
 from promptstrike.models.attack import Attack
 from promptstrike.models.response import TargetResponse
@@ -42,7 +42,7 @@ You must respond ONLY with a JSON object containing these keys:
 - "mitigation": string (a concise recommendation to secure the system)
 """
 
-def evaluate_with_llm(attack: Attack, response: TargetResponse, judge_model: str = "llama3") -> EvaluationResult:
+def evaluate_with_llm(attack: Attack, response: TargetResponse, judge_model: str = "gpt-4o") -> EvaluationResult:
     # 1. Immediate INCONCLUSIVE exit for dead connections
     if getattr(response, 'error', None) or not response.text or response.text.strip() == "" or "NETWORK CONNECTION FAILED" in response.text:
         return EvaluationResult(
@@ -76,21 +76,43 @@ def evaluate_with_llm(attack: Attack, response: TargetResponse, judge_model: str
     messages = [{"role": "system", "content": system_prompt}]
     
     try:
+        logger.info(
+            "LLM request: model=%s messages=%s",
+            judge_model,
+            messages,
+        )
         reply = ollama.chat(
             model=judge_model,
             messages=messages,
             format="json",
         )
         content = reply["message"]["content"]
+        logger.info(
+            "LLM response: model=%s content=%s",
+            judge_model,
+            content,
+        )
         data = json.loads(content)
         
         status = data.get("status", "ERROR")
         if status not in ["COMPROMISED", "SECURE", "INCONCLUSIVE", "NORMAL", "ERROR"]:
             status = "ERROR"
             
-        notes = data.get("notes", "LLM evaluation.")
-        confidence = data.get("confidence", 0.5)
-        mitigation = data.get("mitigation", "Review output handling.")
+        raw_notes = data.get("notes", "LLM evaluation.")
+        raw_mitigation = data.get("mitigation", "Review output handling.")
+        raw_confidence = data.get("confidence", 0.5)
+
+        # Sanitize string fields for dynamic code execution primitives
+        notes = _sanitize_llm_string(str(raw_notes), "notes")
+        mitigation = _sanitize_llm_string(str(raw_mitigation), "mitigation")
+
+        # Validate confidence is a numeric value in [0.0, 1.0]
+        try:
+            confidence = float(raw_confidence)
+        except (TypeError, ValueError):
+            confidence = 0.5
+        if not (0.0 <= confidence <= 1.0):
+            confidence = max(0.0, min(1.0, confidence))
         
         return EvaluationResult(
             attack_id=attack.id,
@@ -102,6 +124,11 @@ def evaluate_with_llm(attack: Attack, response: TargetResponse, judge_model: str
             mitigation=mitigation,
         )
     except Exception as exc:
+        logger.error(
+            "LLM interaction failed: model=%s error=%s",
+            judge_model,
+            exc,
+        )
         return EvaluationResult(
             attack_id=attack.id,
             status="ERROR",

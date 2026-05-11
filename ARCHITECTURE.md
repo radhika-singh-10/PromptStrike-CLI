@@ -42,7 +42,7 @@ graph TD
         InteractiveAdapter["Human CLI Adapter"]
     end
 
-    LocalOllama(("Ollama (Local LLM)"))
+    LocalLLM(("OpenAI GPT-4o"))
     ExternalTarget(("Target App / API"))
     HumanUser(("Human Target"))
 
@@ -52,7 +52,7 @@ graph TD
     
     StaticRunner -->|Loads| AttackLoader
     
-    AgentRunner -->|Generates Attack| LocalOllama
+    AgentRunner -->|Generates Attack| LocalLLM
     
     StaticRunner -->|Sends Payload| APIAdapter
     StaticRunner -->|Sends Payload| PromptAdapter
@@ -68,7 +68,7 @@ graph TD
     
     StaticRunner -->|Validates| RulesEvaluator
     AgentRunner -->|Extracts Status Enum| LLMJudge
-    LLMJudge -->|Chat| LocalOllama
+    LLMJudge -->|Chat| LocalLLM
 ```
 
 ## 2. Abstract Flow Diagrams
@@ -82,7 +82,7 @@ sequenceDiagram
     participant Agent as AgentRunner
     participant Ollama as Local Ollama
     participant Target as External API
-    participant Judge as LLM Judge (Ollama)
+    participant Judge as LLM Judge (GPT-4o)
 
     User->>CLI: promptstrike test-agentic --objective "Leak Data"
     CLI->>Agent: run_agentic_tests(objective, iterations)
